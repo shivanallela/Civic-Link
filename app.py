@@ -1,7 +1,7 @@
 import os
 import sqlite3
 from datetime import datetime
-from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify
+from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify, send_from_directory
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 
@@ -10,15 +10,21 @@ app.secret_key = 'civiclink_secret_key_change_me_in_production'
 
 # Configuration
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
-DATABASE = os.path.join(BASE_DIR, 'database', 'civiclink.db')
-UPLOAD_FOLDER = os.path.join(BASE_DIR, 'static', 'uploads')
+
+if os.environ.get('VERCEL'):
+    DATABASE = '/tmp/civiclink.db'
+    UPLOAD_FOLDER = '/tmp/uploads'
+else:
+    DATABASE = os.path.join(BASE_DIR, 'database', 'civiclink.db')
+    UPLOAD_FOLDER = os.path.join(BASE_DIR, 'static', 'uploads')
+
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
 
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['MAX_CONTENT_LENGTH'] = 10 * 1024 * 1024  # 10MB limit
 
 # Ensure database and upload directories exist
-os.makedirs(os.path.join(BASE_DIR, 'database'), exist_ok=True)
+os.makedirs(os.path.dirname(DATABASE), exist_ok=True)
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 
@@ -86,6 +92,17 @@ init_db()
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+
+@app.route('/static/uploads/<filename>')
+def serve_uploads(filename):
+    # Try serving from writable /tmp/uploads first
+    tmp_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+    if os.path.exists(tmp_path):
+        return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
+    # Fallback to local static uploads folder
+    fallback_dir = os.path.join(BASE_DIR, 'static', 'uploads')
+    return send_from_directory(fallback_dir, filename)
 
 
 def get_department_by_issue(issue_type):
