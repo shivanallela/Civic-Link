@@ -1,0 +1,134 @@
+{% extends 'base.html' %}
+
+{% block title %}CivicLink — Municipal Civic Issue Reporting & Resolution Portal{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section text-center text-lg-start">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-6 mb-5 mb-lg-0 animate-fade-in">
+                <h1 class="hero-title">
+                    Partnering for a <span>Cleaner, Safer</span> City Services
+                </h1>
+                <p class="lead text-white-50 mb-4 fs-5">
+                    CivicLink connects you directly with city municipal departments. Report public infrastructure issues, monitor work progress, and earn points for keeping our city thriving.
+                </p>
+                <div class="d-flex flex-wrap gap-3 justify-content-center justify-content-lg-start">
+                    {% if session.get('user_id') %}
+                        {% if session.get('role') == 'citizen' %}
+                            <a href="{{ url_for('citizen_dashboard') }}" class="btn btn-gov-primary btn-lg px-4"><i class="fa-solid fa-gauge-high me-2"></i> Go to Dashboard</a>
+                            <a href="{{ url_for('report_issue') }}" class="btn btn-outline-light btn-lg px-4"><i class="fa-solid fa-plus me-2"></i> Report New Issue</a>
+                        {% else %}
+                            <a href="{{ url_for('admin_dashboard') }}" class="btn btn-gov-primary btn-lg px-4"><i class="fa-solid fa-user-shield me-2"></i> Admin Console</a>
+                        {% endif %}
+                    {% else %}
+                        <a href="{{ url_for('register') }}" class="btn btn-gov-primary btn-lg px-4"><i class="fa-solid fa-user-plus me-2"></i> Register as Citizen</a>
+                        <a href="{{ url_for('login') }}" class="btn btn-outline-light btn-lg px-4"><i class="fa-solid fa-right-to-bracket me-2"></i> User Login Portal</a>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="col-lg-6 text-center animate-fade-in" style="animation-delay: 0.1s;">
+                <div class="p-4 rounded-4" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); backdrop-filter: blur(10px);">
+                    <i class="fa-solid fa-city text-primary d-block mb-3" style="font-size: 5rem; opacity: 0.9;"></i>
+                    <h3 class="text-white font-sans font-bold">Report Issues Instantly</h3>
+                    <p class="text-white-50 small mb-0 px-md-4">
+                        Upload photos, select issue categories, and watch the assigned departments respond in real-time. Transparent, prompt, and accountable.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Features Info Grid -->
+<section class="py-5 bg-white border-bottom border-light">
+    <div class="container py-4">
+        <h2 class="text-center mb-5 font-bold">How CivicLink Works</h2>
+        <div class="row g-4">
+            <div class="col-md-4 text-center">
+                <div class="p-4 card-gov border-0 h-100">
+                    <div class="bg-primary bg-opacity-10 text-primary rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 70px; height: 70px;">
+                        <i class="fa-solid fa-camera-retro fs-3"></i>
+                    </div>
+                    <h4>1. Snap & Report</h4>
+                    <p class="text-secondary small mb-0">Upload a photo of the infrastructure issue, describe the issue, select a location, and submit it easily from your phone or PC.</p>
+                </div>
+            </div>
+            <div class="col-md-4 text-center">
+                <div class="p-4 card-gov border-0 h-100">
+                    <div class="bg-success bg-opacity-10 text-success rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 70px; height: 70px;">
+                        <i class="fa-solid fa-route fs-3"></i>
+                    </div>
+                    <h4>2. Smart Auto-routing</h4>
+                    <p class="text-secondary small mb-0">Our system assigns the complaint to the correct municipal division (Road, Electrical, Water, Sanitation) automatically.</p>
+                </div>
+            </div>
+            <div class="col-md-4 text-center">
+                <div class="p-4 card-gov border-0 h-100">
+                    <div class="bg-warning bg-opacity-10 text-warning rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 70px; height: 70px;">
+                        <i class="fa-solid fa-coins fs-3"></i>
+                    </div>
+                    <h4>3. Earn Reward Points</h4>
+                    <p class="text-secondary small mb-0">Earn 50 reward points on your citizen account every time an assigned technician resolves a complaint you submitted!</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Resolved Complaints Gallery -->
+<section class="py-5 bg-light">
+    <div class="container py-3">
+        <h2 class="text-center mb-2 font-bold">Recent Success Stories</h2>
+        <p class="text-center text-muted mb-5">See how our municipal departments are actively making the city better</p>
+        
+        {% if resolved_complaints %}
+            <div class="row g-4">
+                {% for complaint in resolved_complaints %}
+                    <div class="col-md-4">
+                        <div class="card card-gov h-100">
+                            <div class="comparison-container p-2 bg-light border-bottom">
+                                <div class="comparison-box">
+                                    <div class="comparison-title py-1 small">BEFORE</div>
+                                    {% if complaint.image_path %}
+                                        <img src="{{ url_for('static', filename=complaint.image_path) }}" alt="Issue Before">
+                                    {% else %}
+                                        <div class="d-flex align-items-center justify-content-center bg-secondary text-white text-muted" style="height: 120px;">No Image</div>
+                                    {% endif %}
+                                </div>
+                                <div class="comparison-box">
+                                    <div class="comparison-title py-1 bg-success small">AFTER</div>
+                                    {% if complaint.resolution_image %}
+                                        <img src="{{ url_for('static', filename=complaint.resolution_image) }}" alt="Issue Resolved">
+                                    {% else %}
+                                        <div class="d-flex align-items-center justify-content-center bg-success text-white text-muted" style="height: 120px;">No Image</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <span class="badge bg-primary bg-opacity-10 text-primary">{{ complaint.issue_type }}</span>
+                                    <span class="text-muted small"><i class="fa-regular fa-calendar me-1"></i> {{ complaint.created_at[:10] }}</span>
+                                </div>
+                                <h5 class="card-title text-truncate">{{ complaint.location }}</h5>
+                                <p class="card-text text-muted small text-truncate">{{ complaint.description }}</p>
+                                <hr class="my-2">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="small text-muted">Reported by <strong>{{ complaint.citizen_name }}</strong></span>
+                                    <span class="badge bg-success-light text-success badge-gov"><i class="fa-solid fa-circle-check"></i> Resolved</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="text-center py-5 bg-white rounded-3 border">
+                <i class="fa-regular fa-folder-open fs-1 text-muted mb-3"></i>
+                <p class="text-muted mb-0">No issues resolved yet. Be the first to report!</p>
+            </div>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

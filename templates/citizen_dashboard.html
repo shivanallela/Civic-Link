@@ -1,0 +1,216 @@
+{% extends 'base.html' %}
+
+{% block title %}Citizen Dashboard — CivicLink Portal{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Header Block -->
+    <div class="row align-items-center mb-4">
+        <div class="col-md-8">
+            <h2 class="font-bold mb-1">Citizen Dashboard</h2>
+            <p class="text-muted mb-0">Track and manage your reported civic complaints.</p>
+        </div>
+        <div class="col-md-4 text-md-end mt-3 mt-md-0">
+            <a href="{{ url_for('report_issue') }}" class="btn btn-gov-primary btn-md px-4 py-2 shadow-sm"><i class="fa-solid fa-circle-plus me-1"></i> Report New Issue</a>
+        </div>
+    </div>
+
+    <!-- Quick Stats Cards Row -->
+    <div class="row g-3 mb-4 animate-fade-in">
+        <div class="col-md-3">
+            <div class="card-gov card-stat info h-100">
+                <div class="stat-icon"><i class="fa-solid fa-folder-open"></i></div>
+                <div class="small text-muted font-sans font-medium text-uppercase">Total Reported</div>
+                <h3 class="mb-0 font-bold text-slate-800">{{ stats.total or 0 }}</h3>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card-gov card-stat warning h-100">
+                <div class="stat-icon"><i class="fa-solid fa-hourglass-half"></i></div>
+                <div class="small text-muted font-sans font-medium text-uppercase">Pending Review</div>
+                <h3 class="mb-0 font-bold text-slate-800">{{ stats.pending or 0 }}</h3>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card-gov card-stat primary h-100">
+                <div class="stat-icon"><i class="fa-solid fa-screwdriver-wrench"></i></div>
+                <div class="small text-muted font-sans font-medium text-uppercase">Active Progress</div>
+                <h3 class="mb-0 font-bold text-slate-800">{{ stats.active or 0 }}</h3>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card-gov card-stat success h-100">
+                <div class="stat-icon"><i class="fa-solid fa-circle-check"></i></div>
+                <div class="small text-muted font-sans font-medium text-uppercase">Resolved Issues</div>
+                <h3 class="mb-0 font-bold text-slate-800">{{ stats.resolved or 0 }}</h3>
+            </div>
+        </div>
+    </div>
+
+    <!-- Point Reward Panel Callout -->
+    <div class="card-gov p-4 border-0 bg-success bg-opacity-10 mb-4 animate-fade-in" style="animation-delay: 0.1s;">
+        <div class="row align-items-center">
+            <div class="col-md-8 d-flex align-items-center gap-3">
+                <div class="bg-success text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 60px; height: 60px; flex-shrink: 0;">
+                    <i class="fa-solid fa-gift fs-3"></i>
+                </div>
+                <div>
+                    <h5 class="text-success font-bold mb-1">Citizen Reward Point Program</h5>
+                    <p class="text-secondary small mb-0">For every complaint you submit that is verified and marked <strong>Resolved</strong> by our city employee team, you receive <strong>50 points</strong>! Redeem points for local services, bus passes, or community events.</p>
+                </div>
+            </div>
+            <div class="col-md-4 text-md-end mt-3 mt-md-0">
+                <div class="d-inline-block bg-white border border-success border-opacity-25 rounded-3 py-2 px-4 shadow-sm">
+                    <span class="text-muted small d-block font-sans text-uppercase text-center">Your Balance</span>
+                    <h2 class="text-success font-bold mb-0 text-center"><i class="fa-solid fa-award"></i> {{ session.get('user_points', 0) }}</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Complaint History List -->
+    <div class="table-gov-wrapper animate-fade-in" style="animation-delay: 0.2s;">
+        <div class="p-3 bg-light border-bottom d-flex justify-content-between align-items-center">
+            <h5 class="mb-0 font-bold"><i class="fa-solid fa-clock-rotate-left me-1"></i> Complaint Submission History</h5>
+        </div>
+        
+        {% if complaints %}
+            <div class="table-responsive">
+                <table class="table table-gov table-hover">
+                    <thead>
+                        <tr>
+                            <th style="width: 100px;">ID</th>
+                            <th style="width: 120px;">Image</th>
+                            <th>Category & Location</th>
+                            <th>Status & Department</th>
+                            <th style="width: 150px;">Date</th>
+                            <th style="width: 150px;" class="text-center">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for complaint in complaints %}
+                            <tr>
+                                <td><strong>#{{ complaint.id }}</strong></td>
+                                <td>
+                                    {% if complaint.image_path %}
+                                        <img src="{{ url_for('static', filename=complaint.image_path) }}" class="rounded shadow-sm" alt="Issue" style="width: 80px; height: 60px; object-fit: cover; cursor: pointer;" data-bs-toggle="modal" data-bs-target="#imageLightBoxModal" data-bs-src="{{ url_for('static', filename=complaint.image_path) }}">
+                                    {% else %}
+                                        <span class="text-muted small text-italic">No Image</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="d-block font-bold">{{ complaint.issue_type }}</span>
+                                    <span class="small text-secondary"><i class="fa-solid fa-location-dot me-1 text-danger"></i> {{ complaint.location }}</span>
+                                </td>
+                                <td>
+                                    <!-- Status Badges -->
+                                    {% if complaint.status == 'Pending' %}
+                                        <span class="badge-gov badge-gov-pending"><i class="fa-solid fa-clock"></i> Pending</span>
+                                    {% elif complaint.status == 'Assigned' %}
+                                        <span class="badge-gov badge-gov-assigned"><i class="fa-solid fa-user-check"></i> Assigned</span>
+                                    {% elif complaint.status == 'In Progress' %}
+                                        <span class="badge-gov badge-gov-inprogress"><i class="fa-solid fa-screwdriver-wrench"></i> In Progress</span>
+                                    {% elif complaint.status == 'Resolved' %}
+                                        <span class="badge-gov badge-gov-resolved"><i class="fa-solid fa-circle-check"></i> Resolved</span>
+                                    {% endif %}
+                                    
+                                    <span class="d-block text-muted small mt-1">
+                                        <i class="fa-solid fa-building me-1"></i> {{ complaint.assigned_department or 'Department Assignment Pending' }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="small text-secondary">{{ complaint.created_at[:16] }}</span>
+                                </td>
+                                <td class="text-center">
+                                    {% if complaint.status == 'Resolved' %}
+                                        <button class="btn btn-gov-primary btn-sm px-3" data-bs-toggle="modal" data-bs-target="#beforeAfterModal" data-bs-before="{{ url_for('static', filename=complaint.image_path) }}" data-bs-after="{{ url_for('static', filename=complaint.resolution_image) }}">
+                                            <i class="fa-solid fa-images me-1"></i> Compare Images
+                                        </button>
+                                    {% else %}
+                                        <span class="text-muted small text-italic">In Progress</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="text-center py-5 bg-white">
+                <i class="fa-regular fa-folder-open fs-1 text-muted mb-3 d-block"></i>
+                <h5 class="text-secondary font-bold">No complaints reported yet</h5>
+                <p class="text-muted small mb-3">If you notice any public infrastructure issues, report them immediately to get points!</p>
+                <a href="{{ url_for('report_issue') }}" class="btn btn-gov-primary btn-sm px-4"><i class="fa-solid fa-plus me-1"></i> Submit First Report</a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Lightbox Modal for Images -->
+<div class="modal fade" id="imageLightBoxModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content bg-transparent border-0">
+            <div class="modal-body p-0 text-center">
+                <img src="#" id="lightBoxImg" class="img-fluid rounded shadow-lg" alt="Zoomed Issue">
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Before & After Comparison Modal -->
+<div class="modal fade font-sans" id="beforeAfterModal" tabindex="-1" aria-labelledby="beforeAfterModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header bg-secondary text-white">
+                <h5 class="modal-title text-white font-bold" id="beforeAfterModalLabel"><i class="fa-solid fa-circle-check text-success me-2"></i> Resolution Proof: Side-by-Side Comparison</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="comparison-container">
+                    <div class="comparison-box shadow-sm">
+                        <div class="comparison-title py-2 font-bold"><i class="fa-solid fa-camera me-1 text-danger"></i> BEFORE (Reported Issue)</div>
+                        <img src="#" id="modalBeforeImg" alt="Before Image">
+                    </div>
+                    <div class="comparison-box shadow-sm">
+                        <div class="comparison-title py-2 bg-success font-bold"><i class="fa-solid fa-circle-check me-1 text-white"></i> AFTER (Resolution Proof)</div>
+                        <img src="#" id="modalAfterImg" alt="After Image">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer bg-light">
+                <button type="button" class="btn btn-gov-secondary px-4" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Handle image lightbox display
+    const lightboxModal = document.getElementById('imageLightBoxModal');
+    if (lightboxModal) {
+        lightboxModal.addEventListener('show.bs.modal', function(event) {
+            const img = event.relatedTarget;
+            const src = img.getAttribute('data-bs-src');
+            lightboxModal.querySelector('#lightBoxImg').src = src;
+        });
+    }
+
+    // Handle Before/After image rendering in Comparison modal
+    const compModal = document.getElementById('beforeAfterModal');
+    if (compModal) {
+        compModal.addEventListener('show.bs.modal', function(event) {
+            const button = event.relatedTarget;
+            const before = button.getAttribute('data-bs-before');
+            const after = button.getAttribute('data-bs-after');
+            
+            compModal.querySelector('#modalBeforeImg').src = before;
+            compModal.querySelector('#modalAfterImg').src = after;
+        });
+    }
+</script>
+{% endblock %}

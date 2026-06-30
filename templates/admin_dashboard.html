@@ -1,0 +1,262 @@
+{% extends 'base.html' %}
+
+{% block title %}Admin Console — CivicLink Portal{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Header Block -->
+    <div class="row align-items-center mb-4">
+        <div class="col">
+            <h2 class="font-bold mb-1">Admin Dashboard</h2>
+            <p class="text-muted mb-0">Manage municipal complaints, assign departments, and upload resolution updates.</p>
+        </div>
+        <div class="col-auto">
+            <a href="{{ url_for('analytics') }}" class="btn btn-gov-secondary px-4"><i class="fa-solid fa-chart-column me-1"></i> View Analytics</a>
+        </div>
+    </div>
+
+    <!-- Quick Stats Cards Row -->
+    <div class="row g-3 mb-4 animate-fade-in">
+        <div class="col-md-2.4 col-sm-6 col-12" style="flex: 1 1 20%;">
+            <div class="card-gov card-stat info h-100">
+                <div class="stat-icon"><i class="fa-solid fa-folder-open"></i></div>
+                <div class="small text-muted font-sans font-medium text-uppercase">Total Issues</div>
+                <h3 class="mb-0 font-bold">{{ cards.total or 0 }}</h3>
+            </div>
+        </div>
+        <div class="col-md-2.4 col-sm-6 col-12" style="flex: 1 1 20%;">
+            <div class="card-gov card-stat warning h-100">
+                <div class="stat-icon"><i class="fa-solid fa-hourglass-half"></i></div>
+                <div class="small text-muted font-sans font-medium text-uppercase">Pending Review</div>
+                <h3 class="mb-0 font-bold text-amber-600">{{ cards.pending or 0 }}</h3>
+            </div>
+        </div>
+        <div class="col-md-2.4 col-sm-6 col-12" style="flex: 1 1 20%;">
+            <div class="card-gov card-stat primary h-100">
+                <div class="stat-icon"><i class="fa-solid fa-screwdriver-wrench"></i></div>
+                <div class="small text-muted font-sans font-medium text-uppercase">Active Works</div>
+                <h3 class="mb-0 font-bold text-blue-600">{{ cards.active or 0 }}</h3>
+            </div>
+        </div>
+        <div class="col-md-2.4 col-sm-6 col-12" style="flex: 1 1 20%;">
+            <div class="card-gov card-stat success h-100">
+                <div class="stat-icon"><i class="fa-solid fa-circle-check"></i></div>
+                <div class="small text-muted font-sans font-medium text-uppercase">Resolved Issues</div>
+                <h3 class="mb-0 font-bold text-green-600">{{ cards.resolved or 0 }}</h3>
+            </div>
+        </div>
+        <div class="col-md-2.4 col-sm-6 col-12" style="flex: 1 1 20%;">
+            <div class="card-gov card-stat danger h-100">
+                <div class="stat-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                <div class="small text-muted font-sans font-medium text-uppercase">Active Critical</div>
+                <h3 class="mb-0 font-bold text-red-600">{{ cards.critical or 0 }}</h3>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search & Filters Container -->
+    <div class="card-gov border-0 shadow-sm p-3 mb-4 animate-fade-in" style="animation-delay: 0.1s;">
+        <form action="{{ url_for('admin_dashboard') }}" method="GET" class="row g-2 align-items-end">
+            <!-- Search Text -->
+            <div class="col-lg-4 col-md-4 col-sm-12">
+                <label for="search" class="form-label font-sans font-medium text-secondary small">Search complaints</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-light border-end-0 text-muted"><i class="fa-solid fa-magnifying-glass"></i></span>
+                    <input type="text" name="search" id="search" class="form-control form-control-gov border-start-0 ps-0 form-control-sm" placeholder="ID, Location, Citizen Name..." value="{{ search }}">
+                </div>
+            </div>
+            
+            <!-- Filter Status -->
+            <div class="col-lg-2.5 col-md-3 col-sm-6" style="flex: 1 1 15%;">
+                <label for="status" class="form-label font-sans font-medium text-secondary small">Filter Status</label>
+                <select name="status" id="status" class="form-select form-control-gov form-control-sm">
+                    <option value="">All Statuses</option>
+                    <option value="Pending" {% if status_filter == 'Pending' %}selected{% endif %}>Pending</option>
+                    <option value="Assigned" {% if status_filter == 'Assigned' %}selected{% endif %}>Assigned</option>
+                    <option value="In Progress" {% if status_filter == 'In Progress' %}selected{% endif %}>In Progress</option>
+                    <option value="Resolved" {% if status_filter == 'Resolved' %}selected{% endif %}>Resolved</option>
+                </select>
+            </div>
+            
+            <!-- Filter Severity -->
+            <div class="col-lg-2.5 col-md-3 col-sm-6" style="flex: 1 1 15%;">
+                <label for="severity" class="form-label font-sans font-medium text-secondary small">Filter Severity</label>
+                <select name="severity" id="severity" class="form-select form-control-gov form-control-sm">
+                    <option value="">All Severities</option>
+                    <option value="Low" {% if severity_filter == 'Low' %}selected{% endif %}>Low</option>
+                    <option value="Medium" {% if severity_filter == 'Medium' %}selected{% endif %}>Medium</option>
+                    <option value="High" {% if severity_filter == 'High' %}selected{% endif %}>High</option>
+                    <option value="Critical" {% if severity_filter == 'Critical' %}selected{% endif %}>Critical</option>
+                </select>
+            </div>
+            
+            <!-- Buttons -->
+            <div class="col-lg-3 col-md-2 col-sm-12 d-flex gap-2">
+                <button type="submit" class="btn btn-gov-primary w-100 py-1.5"><i class="fa-solid fa-filter me-1"></i> Apply</button>
+                <a href="{{ url_for('admin_dashboard') }}" class="btn btn-light border py-1.5 text-secondary px-3" title="Clear Filters"><i class="fa-solid fa-filter-circle-xmark"></i></a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Admin Complaints Table -->
+    <div class="table-gov-wrapper animate-fade-in" style="animation-delay: 0.2s;">
+        <div class="p-3 bg-light border-bottom d-flex justify-content-between align-items-center">
+            <h5 class="mb-0 font-bold"><i class="fa-solid fa-list-check me-1"></i> Municipal Complaints Worklist</h5>
+        </div>
+        
+        {% if complaints %}
+            <div class="table-responsive">
+                <table class="table table-gov table-hover">
+                    <thead>
+                        <tr>
+                            <th style="width: 80px;">ID</th>
+                            <th style="width: 100px;">Photo</th>
+                            <th>Citizen</th>
+                            <th>Category & Location</th>
+                            <th>Description</th>
+                            <th>Severity</th>
+                            <th>Status & Department</th>
+                            <th class="text-center" style="width: 150px;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for complaint in complaints %}
+                            <tr>
+                                <td><strong>#{{ complaint.id }}</strong></td>
+                                <td>
+                                    {% if complaint.image_path %}
+                                        <img src="{{ url_for('static', filename=complaint.image_path) }}" class="rounded shadow-sm" alt="Issue Photo" style="width: 70px; height: 50px; object-fit: cover; cursor: zoom-in;" data-bs-toggle="modal" data-bs-target="#imageLightBoxModal" data-bs-src="{{ url_for('static', filename=complaint.image_path) }}">
+                                    {% else %}
+                                        <span class="text-muted small">No Image</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="d-block font-bold small text-truncate" style="max-width: 120px;">{{ complaint.citizen_name }}</span>
+                                    <span class="text-muted small text-truncate d-block" style="max-width: 120px;" title="{{ complaint.citizen_email }}">{{ complaint.citizen_email }}</span>
+                                </td>
+                                <td>
+                                    <span class="d-block font-bold small text-truncate" style="max-width: 150px;">{{ complaint.issue_type }}</span>
+                                    <span class="small text-secondary text-truncate d-block" style="max-width: 150px;"><i class="fa-solid fa-location-dot me-1 text-danger"></i> {{ complaint.location }}</span>
+                                </td>
+                                <td>
+                                    <p class="mb-0 small text-secondary text-truncate" style="max-width: 200px;" title="{{ complaint.description }}">{{ complaint.description }}</p>
+                                </td>
+                                <td>
+                                    {% if complaint.severity == 'Low' %}
+                                        <span class="badge-gov badge-severity-low">Low</span>
+                                    {% elif complaint.severity == 'Medium' %}
+                                        <span class="badge-gov badge-severity-medium">Medium</span>
+                                    {% elif complaint.severity == 'High' %}
+                                        <span class="badge-gov badge-severity-high">High</span>
+                                    {% elif complaint.severity == 'Critical' %}
+                                        <span class="badge-gov badge-severity-critical">Critical</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if complaint.status == 'Pending' %}
+                                        <span class="badge-gov badge-gov-pending"><i class="fa-solid fa-clock"></i> Pending</span>
+                                    {% elif complaint.status == 'Assigned' %}
+                                        <span class="badge-gov badge-gov-assigned"><i class="fa-solid fa-user-check"></i> Assigned</span>
+                                    {% elif complaint.status == 'In Progress' %}
+                                        <span class="badge-gov badge-gov-inprogress"><i class="fa-solid fa-screwdriver-wrench"></i> In Progress</span>
+                                    {% elif complaint.status == 'Resolved' %}
+                                        <span class="badge-gov badge-gov-resolved"><i class="fa-solid fa-circle-check"></i> Resolved</span>
+                                    {% endif %}
+                                    <span class="d-block text-muted text-xs mt-1"><i class="fa-solid fa-building me-1"></i> {{ complaint.assigned_department or 'Unassigned' }}</span>
+                                </td>
+                                <td class="text-center">
+                                    <button class="btn btn-gov-primary btn-sm px-3" data-bs-toggle="modal" data-bs-target="#updateComplaintModal" data-bs-id="{{ complaint.id }}" data-bs-status="{{ complaint.status }}" data-bs-dept="{{ complaint.assigned_department }}">
+                                        <i class="fa-solid fa-pen-to-square"></i> Manage
+                                    </button>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="text-center py-5 bg-white">
+                <i class="fa-solid fa-folder-open fs-1 text-muted mb-3 d-block"></i>
+                <h5 class="text-secondary font-bold">No complaints found</h5>
+                <p class="text-muted small">No submissions match the current filter criteria.</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Manage / Update Complaint Modal -->
+<div class="modal fade" id="updateComplaintModal" tabindex="-1" aria-labelledby="updateComplaintModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header bg-secondary text-white">
+                <h5 class="modal-title text-white font-bold" id="updateComplaintModalLabel">Update Complaint Details</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            
+            <form id="updateComplaintForm" method="POST" enctype="multipart/form-data">
+                <div class="modal-body p-4">
+                    <!-- Update Status -->
+                    <div class="mb-3">
+                        <label for="modalStatusSelect" class="form-label font-sans font-medium text-secondary">Work Status</label>
+                        <select name="status" id="modalStatusSelect" class="form-select form-control-gov" required>
+                            <option value="Pending">Pending Review</option>
+                            <option value="Assigned">Assigned to Department</option>
+                            <option value="In Progress">In Progress / Under Repair</option>
+                            <option value="Resolved">Resolved (Requires Proof Image)</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Department Assignment -->
+                    <div class="mb-3">
+                        <label for="modalDeptSelect" class="form-label font-sans font-medium text-secondary">Assign Department</label>
+                        <select name="assigned_department" id="modalDeptSelect" class="form-select form-control-gov" required>
+                            <option value="Road Department">Road Department</option>
+                            <option value="Water Department">Water Department</option>
+                            <option value="Electrical Department">Electrical Department</option>
+                            <option value="Sanitation Department">Sanitation Department</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Upload Resolution Image (Required for Resolved status) -->
+                    <div class="mb-3 d-none" id="modalResolutionSection">
+                        <label for="resolutionImage" class="form-label font-sans font-medium text-secondary"><i class="fa-solid fa-camera me-1"></i> Upload Resolution Photograph</label>
+                        <input type="file" name="resolution_image" id="resolutionImage" class="form-control form-control-gov" accept="image/*">
+                        <span class="text-xs text-muted d-block mt-1">Please provide visual confirmation that the issue has been resolved.</span>
+                    </div>
+                </div>
+                
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-light border px-4" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-gov-primary px-5"><i class="fa-solid fa-floppy-disk me-1"></i> Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Image Lightbox Modal -->
+<div class="modal fade" id="imageLightBoxModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content bg-transparent border-0">
+            <div class="modal-body p-0 text-center">
+                <img src="#" id="lightBoxImg" class="img-fluid rounded shadow-lg" alt="Zoomed Issue">
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Handle image lightbox display
+    const lightboxModal = document.getElementById('imageLightBoxModal');
+    if (lightboxModal) {
+        lightboxModal.addEventListener('show.bs.modal', function(event) {
+            const img = event.relatedTarget;
+            const src = img.getAttribute('data-bs-src');
+            lightboxModal.querySelector('#lightBoxImg').src = src;
+        });
+    }
+</script>
+{% endblock %}

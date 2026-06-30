@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+
+{% block title %}Register — CivicLink Portal{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-6 col-md-8 animate-fade-in">
+            <div class="card-gov border-0 shadow-lg p-4">
+                <div class="text-center mb-4">
+                    <i class="fa-solid fa-user-plus text-primary fs-1 mb-2"></i>
+                    <h2 class="font-bold mb-1">Create Account</h2>
+                    <p class="text-muted small">Register to report issues and track resolutions</p>
+                </div>
+                
+                <form action="{{ url_for('register') }}" method="POST">
+                    <div class="mb-3">
+                        <label for="name" class="form-label font-sans font-medium text-secondary">Full Name</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0 text-muted"><i class="fa-solid fa-signature"></i></span>
+                            <input type="text" name="name" id="name" class="form-control form-control-gov border-start-0 ps-0" placeholder="e.g. John Doe" required>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="email" class="form-label font-sans font-medium text-secondary">Email Address</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0 text-muted"><i class="fa-solid fa-envelope"></i></span>
+                            <input type="email" name="email" id="email" class="form-control form-control-gov border-start-0 ps-0" placeholder="e.g. john@example.com" required>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="password" class="form-label font-sans font-medium text-secondary">Password</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0 text-muted"><i class="fa-solid fa-key"></i></span>
+                            <input type="password" name="password" id="password" class="form-control form-control-gov border-start-0 ps-0" placeholder="Create secure password" required>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label for="role" class="form-label font-sans font-medium text-secondary">Register As</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0 text-muted"><i class="fa-solid fa-user-gear"></i></span>
+                            <select name="role" id="role" class="form-select form-control-gov border-start-0 ps-0" required>
+                                <option value="citizen" selected>Citizen (Submit complaints & earn points)</option>
+                                <option value="admin">City Employee / Admin (Manage issues & departments)</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-gov-primary w-100 py-2.5 fs-6 mb-3"><i class="fa-solid fa-user-plus me-2"></i> Register Account</button>
+                </form>
+                
+                <div class="text-center">
+                    <span class="text-muted small">Already have an account?</span>
+                    <a href="{{ url_for('login') }}" class="small text-primary font-semibold text-decoration-none ms-1">Sign in here</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

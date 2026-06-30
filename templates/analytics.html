@@ -1,0 +1,290 @@
+{% extends 'base.html' %}
+
+{% block title %}Analytics Console — CivicLink Portal{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Header Block -->
+    <div class="row align-items-center mb-4">
+        <div class="col">
+            <h2 class="font-bold mb-1"><i class="fa-solid fa-chart-line text-primary me-2"></i> Analytics Dashboard</h2>
+            <p class="text-muted mb-0">Visual analysis of civic complaints, severity levels, and department resolution rates.</p>
+        </div>
+        <div class="col-auto">
+            <a href="{{ url_for('admin_dashboard') }}" class="btn btn-gov-secondary px-4"><i class="fa-solid fa-circle-chevron-left me-1"></i> Back to Console</a>
+        </div>
+    </div>
+
+    <!-- Quick Stats Metric Row -->
+    <div class="row g-3 mb-4 animate-fade-in">
+        <div class="col-md-4">
+            <div class="card-gov p-4 text-center h-100 bg-white border-0 shadow-sm d-flex flex-column justify-content-center">
+                <i class="fa-solid fa-list-check text-primary fs-1 mb-2"></i>
+                <h6 class="text-muted text-uppercase small font-sans font-medium mb-1">Total Submissions</h6>
+                <h2 class="font-bold mb-0 text-slate-800">{{ data.total }}</h2>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card-gov p-4 text-center h-100 bg-white border-0 shadow-sm d-flex flex-column justify-content-center">
+                <i class="fa-solid fa-circle-check text-success fs-1 mb-2"></i>
+                <h6 class="text-muted text-uppercase small font-sans font-medium mb-1">Successfully Resolved</h6>
+                <h2 class="font-bold mb-0 text-slate-800">{{ data.resolved }}</h2>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card-gov p-4 text-center h-100 bg-white border-0 shadow-sm d-flex flex-column justify-content-center">
+                <i class="fa-solid fa-chart-pie text-info fs-1 mb-2"></i>
+                <h6 class="text-muted text-uppercase small font-sans font-medium mb-1">Overall Resolution Rate</h6>
+                <h2 class="font-bold mb-1 text-slate-800">{{ data.resolution_rate }}%</h2>
+                <div class="progress" style="height: 8px;">
+                    <div class="progress-bar bg-success" role="progressbar" style="width: {{ data.resolution_rate }}%" aria-valuenow="{{ data.resolution_rate }}" aria-valuemin="0" aria-valuemax="100"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Grid -->
+    <div class="row g-4 animate-fade-in" style="animation-delay: 0.1s;">
+        <!-- Chart 1: Issue Type -->
+        <div class="col-lg-6 col-12">
+            <div class="card card-gov h-100 border-0 shadow-sm">
+                <div class="card-header bg-light border-bottom py-3">
+                    <h5 class="mb-0 font-bold"><i class="fa-solid fa-chart-pie me-2 text-primary"></i> Complaints by Issue Type</h5>
+                </div>
+                <div class="card-body d-flex align-items-center justify-content-center" style="min-height: 320px; position: relative;">
+                    {% if data.issue_type.data %}
+                        <canvas id="issueTypeChart"></canvas>
+                    {% else %}
+                        <div class="text-center text-muted">
+                            <i class="fa-solid fa-chart-column fs-2 d-block mb-2"></i> No data available
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Chart 2: Severity -->
+        <div class="col-lg-6 col-12">
+            <div class="card card-gov h-100 border-0 shadow-sm">
+                <div class="card-header bg-light border-bottom py-3">
+                    <h5 class="mb-0 font-bold"><i class="fa-solid fa-chart-simple me-2 text-warning"></i> Complaints by Severity</h5>
+                </div>
+                <div class="card-body d-flex align-items-center justify-content-center" style="min-height: 320px; position: relative;">
+                    {% if data.severity.data %}
+                        <canvas id="severityChart"></canvas>
+                    {% else %}
+                        <div class="text-center text-muted">
+                            <i class="fa-solid fa-chart-column fs-2 d-block mb-2"></i> No data available
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Chart 3: Monthly Submissions -->
+        <div class="col-lg-6 col-12">
+            <div class="card card-gov h-100 border-0 shadow-sm">
+                <div class="card-header bg-light border-bottom py-3">
+                    <h5 class="mb-0 font-bold"><i class="fa-solid fa-chart-line me-2 text-info"></i> Monthly Complaints Trend</h5>
+                </div>
+                <div class="card-body d-flex align-items-center justify-content-center" style="min-height: 320px; position: relative;">
+                    {% if data.monthly.data %}
+                        <canvas id="monthlyChart"></canvas>
+                    {% else %}
+                        <div class="text-center text-muted">
+                            <i class="fa-solid fa-chart-column fs-2 d-block mb-2"></i> No data available
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Chart 4: Performance per Department -->
+        <div class="col-lg-6 col-12">
+            <div class="card card-gov h-100 border-0 shadow-sm">
+                <div class="card-header bg-light border-bottom py-3">
+                    <h5 class="mb-0 font-bold"><i class="fa-solid fa-building-shield me-2 text-success"></i> Resolution rate per Department</h5>
+                </div>
+                <div class="card-body d-flex align-items-center justify-content-center" style="min-height: 320px; position: relative;">
+                    {% if data.department.totals %}
+                        <canvas id="deptChart"></canvas>
+                    {% else %}
+                        <div class="text-center text-muted">
+                            <i class="fa-solid fa-chart-column fs-2 d-block mb-2"></i> No data available
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<!-- Chart.js CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Shared Color Palette for chart styling
+        const chartColors = [
+            '#2563EB', // Blue
+            '#16A34A', // Green
+            '#F59E0B', // Warning Amber
+            '#DC2626', // Danger Red
+            '#0284C7', // Sky Info
+            '#4F46E5', // Indigo
+            '#7C3AED', // Violet
+            '#EC4899'  // Pink
+        ];
+
+        // 1. Issue Type Chart (Pie)
+        {% if data.issue_type.data %}
+        const typeCtx = document.getElementById('issueTypeChart').getContext('2d');
+        new Chart(typeCtx, {
+            type: 'pie',
+            data: {
+                labels: {{ data.issue_type.labels | tojson }},
+                datasets: [{
+                    data: {{ data.issue_type.data | tojson }},
+                    backgroundColor: chartColors,
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'right',
+                        labels: { boxWidth: 12, font: { family: 'Inter', size: 11 } }
+                    }
+                }
+            }
+        });
+        {% endif %}
+
+        // 2. Severity Chart (Doughnut)
+        {% if data.severity.data %}
+        const severityCtx = document.getElementById('severityChart').getContext('2d');
+        // Map severities to custom color tokens
+        const severityLabels = {{ data.severity.labels | tojson }};
+        const severityMapColors = severityLabels.map(label => {
+            if (label === 'Critical') return '#DC2626';
+            if (label === 'High') return '#EA580C';
+            if (label === 'Medium') return '#F59E0B';
+            return '#64748B'; // Low/Default
+        });
+
+        new Chart(severityCtx, {
+            type: 'doughnut',
+            data: {
+                labels: severityLabels,
+                datasets: [{
+                    data: {{ data.severity.data | tojson }},
+                    backgroundColor: severityMapColors,
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '65%',
+                plugins: {
+                    legend: {
+                        position: 'right',
+                        labels: { boxWidth: 12, font: { family: 'Inter', size: 11 } }
+                    }
+                }
+            }
+        });
+        {% endif %}
+
+        // 3. Monthly Trend Chart (Line)
+        {% if data.monthly.data %}
+        const monthlyCtx = document.getElementById('monthlyChart').getContext('2d');
+        new Chart(monthlyCtx, {
+            type: 'line',
+            data: {
+                labels: {{ data.monthly.labels | tojson }},
+                datasets: [{
+                    label: 'Submissions',
+                    data: {{ data.monthly.data | tojson }},
+                    borderColor: '#2563EB',
+                    backgroundColor: 'rgba(37, 99, 235, 0.1)',
+                    fill: true,
+                    tension: 0.3,
+                    borderWidth: 2,
+                    pointRadius: 4,
+                    pointBackgroundColor: '#2563EB'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: { stepSize: 1, font: { family: 'Inter', size: 11 } },
+                        grid: { color: '#f1f5f9' }
+                    },
+                    x: {
+                        ticks: { font: { family: 'Inter', size: 11 } },
+                        grid: { display: false }
+                    }
+                },
+                plugins: {
+                    legend: { display: false }
+                }
+            }
+        });
+        {% endif %}
+
+        // 4. Department Resolution Rate (Bar)
+        {% if data.department.totals %}
+        const deptCtx = document.getElementById('deptChart').getContext('2d');
+        new Chart(deptCtx, {
+            type: 'bar',
+            data: {
+                labels: {{ data.department.labels | tojson }},
+                datasets: [
+                    {
+                        label: 'Total Reported',
+                        data: {{ data.department.totals | tojson }},
+                        backgroundColor: '#64748B',
+                        borderRadius: 4
+                    },
+                    {
+                        label: 'Resolved',
+                        data: {{ data.department.resolved | tojson }},
+                        backgroundColor: '#16A34A',
+                        borderRadius: 4
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: { stepSize: 1, font: { family: 'Inter', size: 11 } },
+                        grid: { color: '#f1f5f9' }
+                    },
+                    x: {
+                        ticks: { font: { family: 'Inter', size: 11 } },
+                        grid: { display: false }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        position: 'top',
+                        labels: { boxWidth: 12, font: { family: 'Inter', size: 11 } }
+                    }
+                }
+            }
+        });
+        {% endif %}
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,84 @@
+{% extends 'base.html' %}
+
+{% block title %}Login — CivicLink Portal{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-5 col-md-8 animate-fade-in">
+            <!-- Login Card -->
+            <div class="card-gov border-0 shadow-lg p-4 mb-4">
+                <div class="text-center mb-4">
+                    <i class="fa-solid fa-shield-halved text-primary fs-1 mb-2"></i>
+                    <h2 class="font-bold mb-1">Account Login</h2>
+                    <p class="text-muted small">Enter your email or username to access your dashboard</p>
+                </div>
+                
+                <form action="{{ url_for('login') }}" method="POST">
+                    <div class="mb-3">
+                        <label for="email" class="form-label font-sans font-medium text-secondary">Email Address or Username</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0 text-muted"><i class="fa-solid fa-envelope"></i></span>
+                            <input type="text" name="email" id="email" class="form-control form-control-gov border-start-0 ps-0" placeholder="e.g. alice@example.com or alice" required>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label for="password" class="form-label font-sans font-medium text-secondary">Password</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0 text-muted"><i class="fa-solid fa-key"></i></span>
+                            <input type="password" name="password" id="password" class="form-control form-control-gov border-start-0 ps-0" placeholder="Enter password" required>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-gov-primary w-100 py-2.5 fs-6 mb-3"><i class="fa-solid fa-right-to-bracket me-2"></i> Access Account</button>
+                </form>
+                
+                <div class="text-center">
+                    <span class="text-muted small">New to CivicLink?</span>
+                    <a href="{{ url_for('register') }}" class="small text-primary font-semibold text-decoration-none ms-1">Create an account</a>
+                </div>
+            </div>
+            
+            <!-- Demo Credentials Helper Callout -->
+            <div class="p-3 bg-secondary bg-opacity-10 rounded-3 border border-secondary border-opacity-20">
+                <h6 class="text-secondary font-bold mb-2"><i class="fa-solid fa-circle-info me-2 text-primary"></i> Demo Accounts (Sign In Instantly)</h6>
+                <div class="table-responsive">
+                    <table class="table table-sm table-borderless mb-0 text-secondary" style="font-size: 0.8rem;">
+                        <thead>
+                            <tr class="border-bottom border-secondary border-opacity-10">
+                                <th>Role</th>
+                                <th>Username / Email</th>
+                                <th>Password</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Resident</td>
+                                <td><code>alice</code> or <code>alice@example.com</code></td>
+                                <td><code>user123</code></td>
+                            </tr>
+                            <tr>
+                                <td>Resident</td>
+                                <td><code>bob</code> or <code>bob@example.com</code></td>
+                                <td><code>user123</code></td>
+                            </tr>
+                            <tr class="border-top border-secondary border-opacity-10">
+                                <td>Employee / Admin</td>
+                                <td><code>emp01</code> or <code>emp01@civiclink.gov</code></td>
+                                <td><code>emp123</code></td>
+                            </tr>
+                            <tr>
+                                <td>Employee / Admin</td>
+                                <td><code>emp02</code> or <code>emp02@civiclink.gov</code></td>
+                                <td><code>emp123</code></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+        </div>
+    </div>
+</div>
+{% endblock %}
